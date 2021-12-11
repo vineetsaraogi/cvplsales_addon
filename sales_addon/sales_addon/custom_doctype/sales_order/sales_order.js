@@ -143,7 +143,7 @@ frappe.ui.form.on('Sales Order Item', {
 	},
 	clear_amount(frm,cdt,cdn){
 	     var row= locals[cdt][cdn]
-		 var stock_uom_rate = row.price_list_rate / row.conversion_factor
+		 var stock_uom_rate = parseFloat(row.price_list_rate) / parseFloat(row.conversion_factor)
 		 console.log(row.price_list_rate)
 		 console.log(row.conversion_factor)
 	    //    row.rate_mod_c = 0
