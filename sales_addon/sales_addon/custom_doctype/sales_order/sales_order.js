@@ -102,28 +102,62 @@ frappe.ui.form.on("Sales Order Item", {
 			})
 		}
     },
-    // uom(frm, cdt, cdn) {
-    //     let row = frappe.get_doc(cdt, cdn);
-    //     console.log(row.item_code)
-    //     console.log(frm.doc.company)
-    //     console.log(row.uom)
-    //     frappe.call({
-    //         "method":"sales_addon.sales_addon.custom_doctype.sales_order.sales_order.get_uom_for_check",
-    //         "args":{
-    //             "item_code":row.item_code,
-    //             "company": frm.doc.company,
-    //             "uom": row.uom
-    //         },
-    //         callback:function(res){
-    //             if(res.message == false){
-    //                 frappe.msgprint('Item "' + row.item_code + '" quota is not set for "' + frm.doc.company + '"')
-    //                 row.conversion_factor = 1;
-    //                 row.stock_qty = 1;
-    //                 frm.refresh_field("items");
-    //             }
-    //         }
-
-    //     })
-    // },
 });
 
+frappe.ui.form.on('Sales Order Item', {
+	refresh(frm) {
+		// your code here
+	},
+	cal_discount_margin(frm,cdt,cdn){
+	    var row= locals[cdt][cdn]
+	    if(row.margin_or_discount == "Premium" && row.amount_c && row.price_list_rate){
+	        frappe.db.get_value("Item",row.item_code,"max_prm_amt",function(res){
+	            if(parseFloat(res.max_prm_amt) !== 0 && parseFloat(res.max_prm_amt) < parseFloat(row.amount_c)){
+	                frappe.msgprint("Maximum Discount permitted on this item is <b>Rs."+res.max_prm_amt.toString()+ "/kg</b>")
+	                row.amount_c = 0
+	            }else{
+	                var stock_uom_rate = row.price_list_rate / row.conversion_factor
+	                row.rate_mod_c = stock_uom_rate + row.amount_c
+	                row.rate = (stock_uom_rate + row.amount_c) * row.conversion_factor
+	                cur_frm.script_manager.trigger("rate",cdt,cdn)
+	            }
+	        })
+	        
+	        frm.refresh_field("items")
+	    }else if(row.margin_or_discount == "Discount" && row.amount_c && row.price_list_rate){
+	        frappe.db.get_value("Item",row.item_code,"max_disc_amt",function(res){
+	            if(parseFloat(res.max_prm_amt) !== 0 && parseFloat(res.max_disc_amt) < parseFloat(row.amount_c)){
+                    
+	                frappe.msgprint("Maximum Premium permitted on this item is <b>Rs."+res.max_disc_amt.toString()+ "/kg</b>")
+	                row.amount_c = 0
+	            }else{
+	                var stock_uom_rate = row.price_list_rate / row.conversion_factor
+	                row.rate_mod_c = stock_uom_rate - row.amount_c
+	                row.rate = (stock_uom_rate - row.amount_c) * row.conversion_factor
+	                cur_frm.script_manager.trigger("rate",cdt,cdn)
+	            }
+	        })
+	        
+	        frm.refresh_field("items")
+	    }
+	},
+	clear_amount(frm,cdt,cdn){
+	     var row= locals[cdt][cdn]
+	       row.rate_mod_c = 0
+	      row.amount_c = 0
+	      row.rate = 0
+	      cur_frm.script_manager.trigger("rate",cdt,cdn)
+	      frm.refresh_field("items")
+	},
+	margin_or_discount(frm,cdt,cdn){
+	     cur_frm.script_manager.trigger("clear_amount",cdt,cdn)
+	},
+	amount_c(frm,cdt,cdn){
+	   
+	    cur_frm.script_manager.trigger("cal_discount_margin",cdt,cdn)
+	},
+	item_code(frm,cdt,cdn){
+	     cur_frm.script_manager.trigger("clear_amount",cdt,cdn)
+	}
+	
+})

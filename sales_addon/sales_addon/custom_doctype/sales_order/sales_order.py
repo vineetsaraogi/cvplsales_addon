@@ -68,7 +68,7 @@ def get_item_sold_today(item_code, company):
 	values = {'item_code': item_code, "company": company}
 	total_quantity = frappe.db.sql("""
 		select
-		    SUM(`tabSales Order Item`.stock_qty)
+		    SUM(`tabSales Order Item`.qty)
 		from
 		    `tabSales Order Item`
 			LEFT JOIN `tabSales Order` on `tabSales Order`.name = `tabSales Order Item`.parent
