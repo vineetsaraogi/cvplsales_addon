@@ -126,7 +126,7 @@ frappe.ui.form.on('Sales Order Item', {
 	        frm.refresh_field("items")
 	    }else if(row.margin_or_discount == "Discount" && row.amount_c && row.price_list_rate){
 	        frappe.db.get_value("Item",row.item_code,"max_disc_amt",function(res){
-	            if(parseFloat(res.max_prm_amt) !== 0 && parseFloat(res.max_disc_amt) < parseFloat(row.amount_c)){
+	            if(parseFloat(res.max_disc_amt) !== 0 && parseFloat(res.max_disc_amt) < parseFloat(row.amount_c)){
                     
 	                frappe.msgprint("Maximum Premium permitted on this item is <b>Rs."+res.max_disc_amt.toString()+ "/kg</b>")
 	                row.amount_c = 0
@@ -143,9 +143,10 @@ frappe.ui.form.on('Sales Order Item', {
 	},
 	clear_amount(frm,cdt,cdn){
 	     var row= locals[cdt][cdn]
-	       row.rate_mod_c = 0
+		 var stock_uom_rate = row.price_list_rate / row.conversion_factor
+	    //    row.rate_mod_c = 0
 	      row.amount_c = 0
-	      row.rate = 0
+	      row.rate = stock_uom_rate
 	      cur_frm.script_manager.trigger("rate",cdt,cdn)
 	      frm.refresh_field("items")
 	},
