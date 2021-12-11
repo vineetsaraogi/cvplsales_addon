@@ -145,8 +145,9 @@ frappe.ui.form.on('Sales Order Item', {
 	     var row= locals[cdt][cdn]
 		 var stock_uom_rate = row.price_list_rate / row.conversion_factor
 	    //    row.rate_mod_c = 0
-	      row.amount_c = 0
-	      row.rate = stock_uom_rate
+	      
+	    //   row.rate = stock_uom_rate
+		  row.amount_c = 0
 	      cur_frm.script_manager.trigger("rate",cdt,cdn)
 	      frm.refresh_field("items")
 	},
